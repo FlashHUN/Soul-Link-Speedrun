@@ -1,6 +1,9 @@
 package net.zenzty.soullink.mixin.player;
 
 import java.util.List;
+
+import net.zenzty.soullink.server.settings.Settings;
+import net.zenzty.soullink.util.TeamsHelper;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
@@ -31,18 +34,20 @@ public abstract class ServerPlayerEntityMixin {
         ServerPlayerEntity player = (ServerPlayerEntity) (Object) this;
         RunManager runManager = RunManager.getInstance();
 
-        // TODO when in team mode, don't cancel this and don't delete the world
-
         // Only intercept death during active runs
         if (runManager == null || !runManager.isRunActive()) {
             return;
         }
 
-        SoulLink.LOGGER.info("Player {} died during active run - triggering game over",
-                player.getName().getString());
+        boolean isTeamsMode = Settings.getInstance().isTeamsMode();
 
-        // Cancel the death event to prevent death screen
-        ci.cancel();
+        SoulLink.LOGGER.info("Player {} died during active run - {}",
+                player.getName().getString(), isTeamsMode ? "killing team " + TeamsHelper.getPlayersTeamNameOrNull(player) : "triggering game over");
+
+        // Cancel the death event to prevent death screen - not needed in teams mode
+        if (!isTeamsMode) {
+            ci.cancel();
+        }
 
         // Broadcast death message to all players (use vanilla death message format)
         Text deathMessage = damageSource.getDeathMessage(player);
@@ -51,19 +56,26 @@ public abstract class ServerPlayerEntityMixin {
                 .append(deathMessage.copy().formatted(Formatting.RED));
         runManager.getServer().getPlayerManager().broadcast(formattedDeathMessage, false);
 
-        // Restore health so player doesn't look dead
-        player.setHealth(player.getMaxHealth());
+        if (isTeamsMode) {
+            // Kill all players on the dead player's team
+            for (ServerPlayerEntity playerOnTeam : TeamsHelper.getPlayersOnPlayersTeam(player)) {
+                playerOnTeam.damage(player.getEntityWorld(), damageSource, Float.MAX_VALUE);
+            }
+        } else {
+            // Restore health so player doesn't look dead
+            player.setHealth(player.getMaxHealth());
 
-        // Clear lingering harmful effects and extinguish fire
-        List<RegistryEntry<StatusEffect>> effectsToRemove = player.getStatusEffects().stream()
-                .filter(effect -> !effect.getEffectType().value().isBeneficial())
-                .map(StatusEffectInstance::getEffectType).toList();
+            // Clear lingering harmful effects and extinguish fire
+            List<RegistryEntry<StatusEffect>> effectsToRemove = player.getStatusEffects().stream()
+                    .filter(effect -> !effect.getEffectType().value().isBeneficial())
+                    .map(StatusEffectInstance::getEffectType).toList();
 
-        effectsToRemove.forEach(player::removeStatusEffect);
-        player.extinguish();
+            effectsToRemove.forEach(player::removeStatusEffect);
+            player.extinguish();
+        }
 
         // Trigger game over if not already in that state
-        if (!runManager.isGameOver()) {
+        if (!isTeamsMode && !runManager.isGameOver()) {
             net.minecraft.server.MinecraftServer server = runManager.getServer();
             if (server != null) {
                 server.execute(() -> {
