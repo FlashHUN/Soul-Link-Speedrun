@@ -18,6 +18,7 @@ public class Settings {
     private boolean halfHeartMode = false;
     private boolean sharedPotions = false;
     private boolean sharedJumping = false;
+    private boolean teamsMode = false;
 
     // Pending settings to be applied on next run
     private SettingsSnapshot pendingSnapshot = null;
@@ -80,13 +81,23 @@ public class Settings {
         this.sharedJumping = sharedJumping;
     }
 
+    // ====================== TEAMS MODE ======================
+
+    public boolean isTeamsMode() {
+        return teamsMode;
+    }
+
+    public void setTeamsMode(boolean teamsMode) {
+        this.teamsMode = teamsMode;
+    }
+
     // ==================== UTILITY ====================
 
     /**
      * Creates a copy of the current settings for temporary editing in the GUI.
      */
     public SettingsSnapshot createSnapshot() {
-        return new SettingsSnapshot(difficulty, halfHeartMode, sharedPotions, sharedJumping);
+        return new SettingsSnapshot(difficulty, halfHeartMode, sharedPotions, sharedJumping, teamsMode);
     }
 
     /**
@@ -125,10 +136,11 @@ public class Settings {
         this.halfHeartMode = snapshot.halfHeartMode();
         this.sharedPotions = snapshot.sharedPotions();
         this.sharedJumping = snapshot.sharedJumping();
+        this.teamsMode = snapshot.teamsMode();
 
         SoulLink.LOGGER.info(
-                "Settings applied: Difficulty={}, HalfHeart={}, SharedPotions={}, SharedJumping={}",
-                difficulty, halfHeartMode, sharedPotions, sharedJumping);
+                "Settings applied: Difficulty={}, HalfHeart={}, SharedPotions={}, SharedJumping={}, TeamsMode={}",
+                difficulty, halfHeartMode, sharedPotions, sharedJumping, teamsMode);
     }
 
     /**
@@ -146,6 +158,6 @@ public class Settings {
      * Immutable snapshot of settings for comparison and temporary editing.
      */
     public record SettingsSnapshot(Difficulty difficulty, boolean halfHeartMode,
-            boolean sharedPotions, boolean sharedJumping) {
+            boolean sharedPotions, boolean sharedJumping, boolean teamsMode) {
     }
 }

@@ -31,6 +31,8 @@ public abstract class ServerPlayerEntityMixin {
         ServerPlayerEntity player = (ServerPlayerEntity) (Object) this;
         RunManager runManager = RunManager.getInstance();
 
+        // TODO when in team mode, don't cancel this and don't delete the world
+
         // Only intercept death during active runs
         if (runManager == null || !runManager.isRunActive()) {
             return;

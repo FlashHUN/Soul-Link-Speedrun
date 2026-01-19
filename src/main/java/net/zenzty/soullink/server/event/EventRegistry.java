@@ -182,7 +182,7 @@ public class EventRegistry {
         // Soul Link info
         player.sendMessage(Text.empty().append(Text.literal("❤ ").formatted(Formatting.RED))
                 .append(Text.literal("Soul Link").formatted(Formatting.WHITE))
-                .append(Text.literal(" - All players share health and hunger.")
+                .append(Text.literal(" - Teams or All players share health and hunger.")
                         .formatted(Formatting.GRAY)),
                 false);
 
@@ -196,7 +196,7 @@ public class EventRegistry {
         // Death info
         player.sendMessage(Text.empty().append(Text.literal("☠ ").formatted(Formatting.DARK_RED))
                 .append(Text.literal("Death").formatted(Formatting.WHITE))
-                .append(Text.literal(" - If anyone dies, the run ends for all.")
+                .append(Text.literal(" - If anyone dies, the run ends for all - except in Teams Mode.")
                         .formatted(Formatting.GRAY)),
                 false);
 

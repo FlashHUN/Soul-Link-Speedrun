@@ -38,6 +38,7 @@ public class SettingsGui {
     private static final int HALF_HEART_SLOT = 12;
     private static final int SHARED_POTIONS_SLOT = 14;
     private static final int SHARED_JUMPING_SLOT = 16;
+    private static final int TEAMS_MODE_SLOT = 22;
     private static final int BUG_REPORT_SLOT = 47;
     private static final int CONFIRM_SLOT = 49; // Bottom center
 
@@ -58,7 +59,7 @@ public class SettingsGui {
         }
 
         Settings.SettingsSnapshot originalSnapshot = new Settings.SettingsSnapshot(worldDifficulty,
-                settings.isHalfHeartMode(), settings.isSharedPotions(), settings.isSharedJumping());
+                settings.isHalfHeartMode(), settings.isSharedPotions(), settings.isSharedJumping(), settings.isTeamsMode());
 
         // Create inventory with all slots
         SettingsInventory inventory = new SettingsInventory(originalSnapshot);
@@ -91,6 +92,7 @@ public class SettingsGui {
         private boolean pendingHalfHeart;
         private boolean pendingSharedPotions;
         private boolean pendingSharedJumping;
+        private boolean pendingTeamsMode;
         private final Settings.SettingsSnapshot original;
 
         public SettingsInventory(Settings.SettingsSnapshot original) {
@@ -100,6 +102,7 @@ public class SettingsGui {
             this.pendingHalfHeart = original.halfHeartMode();
             this.pendingSharedPotions = original.sharedPotions();
             this.pendingSharedJumping = original.sharedJumping();
+            this.pendingTeamsMode = original.teamsMode();
 
             populateItems();
         }
@@ -126,6 +129,9 @@ public class SettingsGui {
 
             // Add shared jumping setting
             setStack(SHARED_JUMPING_SLOT, createSharedJumpingItem());
+
+            // Add teams mode setting
+            setStack(TEAMS_MODE_SLOT, createTeamsModeItem());
 
             // Add confirm button
             setStack(CONFIRM_SLOT, createConfirmItem());
@@ -242,13 +248,38 @@ public class SettingsGui {
                             .setStyle(Style.EMPTY.withItalic(false).withFormatting(Formatting.GRAY))
                             .append(pendingSharedJumping
                                     ? Text.literal("ENABLED")
-                                            .setStyle(Style.EMPTY.withItalic(false)
-                                                    .withFormatting(Formatting.GREEN))
+                                    .setStyle(Style.EMPTY.withItalic(false)
+                                            .withFormatting(Formatting.GREEN))
                                     : Text.literal("DISABLED")
-                                            .setStyle(Style.EMPTY.withItalic(false)
-                                                    .withFormatting(Formatting.RED))),
+                                    .setStyle(Style.EMPTY.withItalic(false)
+                                            .withFormatting(Formatting.RED))),
                     Text.empty(),
                     Text.literal("If one player jumps, all players jump.").setStyle(
+                            Style.EMPTY.withItalic(false).withFormatting(Formatting.DARK_GRAY)),
+                    Text.empty(), Text.literal("Click to toggle").setStyle(
+                            Style.EMPTY.withItalic(false).withFormatting(Formatting.DARK_GRAY))));
+            item.set(DataComponentTypes.LORE, sharedJumpingLore);
+
+            return item;
+        }
+
+        private ItemStack createTeamsModeItem() {
+            ItemStack item =
+                    new ItemStack(pendingTeamsMode ? Items.OMINOUS_TRIAL_KEY : Items.TRIAL_KEY);
+            item.set(DataComponentTypes.CUSTOM_NAME,
+                    createItemName("Teams Mode", Formatting.YELLOW, Formatting.BOLD));
+            LoreComponent sharedJumpingLore = new LoreComponent(List.of(
+                    Text.literal("Status: ")
+                            .setStyle(Style.EMPTY.withItalic(false).withFormatting(Formatting.GRAY))
+                            .append(pendingTeamsMode
+                                    ? Text.literal("ENABLED")
+                                    .setStyle(Style.EMPTY.withItalic(false)
+                                            .withFormatting(Formatting.GREEN))
+                                    : Text.literal("DISABLED")
+                                    .setStyle(Style.EMPTY.withItalic(false)
+                                            .withFormatting(Formatting.RED))),
+                    Text.empty(),
+                    Text.literal("Only share stats & etc. between players on the same scoreboard teams.").setStyle(
                             Style.EMPTY.withItalic(false).withFormatting(Formatting.DARK_GRAY)),
                     Text.empty(), Text.literal("Click to toggle").setStyle(
                             Style.EMPTY.withItalic(false).withFormatting(Formatting.DARK_GRAY))));
@@ -304,9 +335,18 @@ public class SettingsGui {
                     .setStyle(Style.EMPTY.withItalic(false).withFormatting(Formatting.GRAY))
                     .append(pendingSharedJumping
                             ? Text.literal("Enabled").setStyle(
-                                    Style.EMPTY.withItalic(false).withFormatting(Formatting.GREEN))
+                            Style.EMPTY.withItalic(false).withFormatting(Formatting.GREEN))
                             : Text.literal("Disabled").setStyle(
-                                    Style.EMPTY.withItalic(false).withFormatting(Formatting.RED))));
+                            Style.EMPTY.withItalic(false).withFormatting(Formatting.RED))));
+
+            // Shared Jump
+            loreLines.add(Text.literal("  • Teams: ")
+                    .setStyle(Style.EMPTY.withItalic(false).withFormatting(Formatting.GRAY))
+                    .append(pendingTeamsMode
+                            ? Text.literal("Enabled").setStyle(
+                            Style.EMPTY.withItalic(false).withFormatting(Formatting.GREEN))
+                            : Text.literal("Disabled").setStyle(
+                            Style.EMPTY.withItalic(false).withFormatting(Formatting.RED))));
 
             loreLines.add(Text.empty());
             loreLines.add(Text.literal("⚠ Settings apply next run!")
@@ -342,12 +382,13 @@ public class SettingsGui {
             return pendingDifficulty != original.difficulty()
                     || pendingHalfHeart != original.halfHeartMode()
                     || pendingSharedPotions != original.sharedPotions()
-                    || pendingSharedJumping != original.sharedJumping();
+                    || pendingSharedJumping != original.sharedJumping()
+                    || pendingTeamsMode != original.teamsMode();
         }
 
         public Settings.SettingsSnapshot getPendingSnapshot() {
             return new Settings.SettingsSnapshot(pendingDifficulty, pendingHalfHeart,
-                    pendingSharedPotions, pendingSharedJumping);
+                    pendingSharedPotions, pendingSharedJumping, pendingTeamsMode);
         }
 
         public Settings.SettingsSnapshot getOriginal() {
@@ -370,6 +411,10 @@ public class SettingsGui {
             return pendingSharedJumping;
         }
 
+        public boolean isPendingTeamsMode() {
+            return pendingTeamsMode;
+        }
+
         // Setters for pending values
         public void cycleDifficulty() {
             pendingDifficulty = switch (pendingDifficulty) {
@@ -389,6 +434,10 @@ public class SettingsGui {
 
         public void toggleSharedJumping() {
             pendingSharedJumping = !pendingSharedJumping;
+        }
+
+        public void toggleTeamsMode() {
+            pendingTeamsMode = !pendingTeamsMode;
         }
     }
 
@@ -518,6 +567,11 @@ public class SettingsGui {
                     settingsInventory.populateItems();
                     playClickSound();
                 }
+                case TEAMS_MODE_SLOT -> {
+                    settingsInventory.toggleTeamsMode();
+                    settingsInventory.populateItems();
+                    playClickSound();
+                }
                 case BUG_REPORT_SLOT -> {
                     // Print Discord invite link to chat for easy copy/click.
                     final String discordUrl = "https://discord.gg/7KkZP2r62H";
@@ -624,6 +678,21 @@ public class SettingsGui {
                 String newVal = settingsInventory.isPendingSharedJumping() ? "ON" : "OFF";
                 Text changeMsg = Text.empty().append(RunManager.getPrefix())
                         .append(Text.literal("  • Shared Jumping: ").setStyle(
+                                Style.EMPTY.withItalic(false).withFormatting(Formatting.GRAY)))
+                        .append(Text.literal(oldVal).setStyle(
+                                Style.EMPTY.withItalic(false).withFormatting(Formatting.RED)))
+                        .append(Text.literal(" → ").setStyle(
+                                Style.EMPTY.withItalic(false).withFormatting(Formatting.DARK_GRAY)))
+                        .append(Text.literal(newVal).setStyle(
+                                Style.EMPTY.withItalic(false).withFormatting(Formatting.GREEN)));
+                server.getPlayerManager().broadcast(changeMsg, false);
+            }
+
+            if (settingsInventory.isPendingTeamsMode() != orig.teamsMode()) {
+                String oldVal = orig.teamsMode() ? "ON" : "OFF";
+                String newVal = settingsInventory.isPendingTeamsMode() ? "ON" : "OFF";
+                Text changeMsg = Text.empty().append(RunManager.getPrefix())
+                        .append(Text.literal("  • Teams Mode: ").setStyle(
                                 Style.EMPTY.withItalic(false).withFormatting(Formatting.GRAY)))
                         .append(Text.literal(oldVal).setStyle(
                                 Style.EMPTY.withItalic(false).withFormatting(Formatting.RED)))
