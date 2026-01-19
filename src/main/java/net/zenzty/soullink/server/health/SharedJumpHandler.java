@@ -1,8 +1,7 @@
 package net.zenzty.soullink.server.health;
 
-import java.util.HashSet;
-import java.util.Set;
-import java.util.UUID;
+import java.util.*;
+
 import net.minecraft.network.packet.s2c.play.EntityVelocityUpdateS2CPacket;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.network.ServerPlayerEntity;
@@ -10,6 +9,7 @@ import net.minecraft.server.world.ServerWorld;
 import net.zenzty.soullink.SoulLink;
 import net.zenzty.soullink.server.run.RunManager;
 import net.zenzty.soullink.server.settings.Settings;
+import net.zenzty.soullink.util.TeamsHelper;
 
 /**
  * Handles shared jumping functionality. When a player jumps, forces all other players who didn't
@@ -21,10 +21,10 @@ import net.zenzty.soullink.server.settings.Settings;
 public class SharedJumpHandler {
 
     // Track players who jumped naturally in the current tick
-    private static final Set<UUID> jumpersThisTick = new HashSet<>();
+    private static final Map<String, Set<UUID>> jumpersThisTick = new HashMap<>();
 
     // Track players who have been forced to jump this tick (to prevent double velocity)
-    private static final Set<UUID> forcedJumpersThisTick = new HashSet<>();
+    private static final Map<String, Set<UUID>> forcedJumpersThisTick = new HashMap<>();
 
     // Track the last tick we collected jumpers for
     private static int lastCollectedTick = -1;
@@ -74,10 +74,12 @@ public class SharedJumpHandler {
             lastCollectedTick = currentTick;
         }
 
+        String playersTeamName = TeamsHelper.getPlayersTeamNameOrNull(player);
+
         // Add this player to the jumpers set (only if not already processing)
         // This prevents double-counting if somehow called during processing
         if (!processingJumps) {
-            jumpersThisTick.add(player.getUuid());
+            jumpersThisTick.computeIfAbsent(playersTeamName, teamName -> new HashSet<>()).add(player.getUuid());
         }
 
         // Log for debugging
@@ -124,17 +126,19 @@ public class SharedJumpHandler {
                     continue;
                 }
 
+                String playersTeamName = TeamsHelper.getPlayersTeamNameOrNull(player);
+
                 // Skip players who already jumped naturally this tick
-                if (jumpersThisTick.contains(player.getUuid()))
+                if (jumpersThisTick.computeIfAbsent(playersTeamName, teamName -> new HashSet<>()).contains(player.getUuid()))
                     continue;
 
                 // Skip players who have already been forced to jump this tick
-                if (forcedJumpersThisTick.contains(player.getUuid()))
+                if (forcedJumpersThisTick.computeIfAbsent(playersTeamName, teamName -> new HashSet<>()).contains(player.getUuid()))
                     continue;
 
                 // Apply force jump to this player
                 applyForceJump(player);
-                forcedJumpersThisTick.add(player.getUuid());
+                forcedJumpersThisTick.computeIfAbsent(playersTeamName, teamName -> new HashSet<>()).add(player.getUuid());
             }
 
             SoulLink.LOGGER.debug(

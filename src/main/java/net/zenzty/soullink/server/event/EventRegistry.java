@@ -24,6 +24,7 @@ import net.zenzty.soullink.server.health.SharedJumpHandler;
 import net.zenzty.soullink.server.health.SharedStatsHandler;
 import net.zenzty.soullink.server.run.RunManager;
 import net.zenzty.soullink.server.run.RunState;
+import net.zenzty.soullink.server.settings.Settings;
 
 /**
  * Registers all Fabric events: server lifecycle, player connections, tick updates, entity events.
@@ -349,8 +350,9 @@ public class EventRegistry {
                     // have already cancelled onDeath() and triggered game over
                     if (player.getHealth() <= 0) {
                         SoulLink.LOGGER.warn(
-                                "Player {} reached 0 health despite mixin check - triggering game over",
-                                player.getName().getString());
+                                "Player {} reached 0 health despite mixin check - {}",
+                                player.getName().getString(),
+                                Settings.getInstance().isTeamsMode() ? "in teams mode, continuing" : "triggering game over");
 
                         handlePlayerDeath(player, source, runManager);
                         return;
@@ -380,8 +382,10 @@ public class EventRegistry {
                 .append(deathMessage.copy().formatted(Formatting.RED));
         runManager.getServer().getPlayerManager().broadcast(formattedDeathMessage, false);
 
-        player.setHealth(player.getMaxHealth());
-        runManager.triggerGameOver();
+        if (!Settings.getInstance().isTeamsMode()) {
+            player.setHealth(player.getMaxHealth());
+            runManager.triggerGameOver();
+        }
     }
 
     /**
