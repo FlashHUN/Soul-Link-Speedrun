@@ -6,11 +6,14 @@ import net.minecraft.advancement.AdvancementProgress;
 import net.minecraft.advancement.PlayerAdvancementTracker;
 import net.minecraft.entity.attribute.EntityAttributes;
 import net.minecraft.network.packet.s2c.play.ClearTitleS2CPacket;
+import net.minecraft.network.packet.s2c.play.TitleS2CPacket;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.sound.SoundCategory;
 import net.minecraft.sound.SoundEvents;
+import net.minecraft.text.Text;
+import net.minecraft.util.Formatting;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.GameMode;
 import net.zenzty.soullink.SoulLink;
@@ -64,6 +67,38 @@ public class PlayerTeleportService {
 
         // Set up timer tracking for first player
         timerService.beginWaitingForInput(player);
+    }
+
+    /**
+     * Teleports a player to the spawn position and sets up for gameplay.
+     *
+     * @param player The player to teleport
+     * @param world The target world
+     * @param spawnPos The spawn position
+     */
+    public void teleportToSpawnOnDeath(ServerPlayerEntity player, ServerWorld world, BlockPos spawnPos) {
+        if (player == null || world == null || spawnPos == null) {
+            SoulLink.LOGGER.error("Failed to teleport to spawn: null parameter(s)");
+            return;
+        }
+
+        // Teleport to spawn
+        player.teleport(world, spawnPos.getX() + 0.5, spawnPos.getY(), spawnPos.getZ() + 0.5,
+                Set.of(), 0, 0, true);
+
+        if (player.networkHandler != null) {
+            // Clear any title
+            player.networkHandler.sendPacket(new ClearTitleS2CPacket(false));
+            // Send death title
+            player.networkHandler.sendPacket(new TitleS2CPacket(Text.literal("☠ You Died").formatted(Formatting.RED, Formatting.BOLD)));
+        }
+
+        // Sync stats
+        SharedStatsHandler.syncPlayerToSharedStats(player);
+
+        // Play ready sound
+        world.playSound(null, player.getX(), player.getY(), player.getZ(),
+                SoundEvents.BLOCK_BEACON_ACTIVATE, SoundCategory.PLAYERS, 1.0f, 1.5f);
     }
 
     /**

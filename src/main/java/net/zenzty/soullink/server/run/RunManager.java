@@ -286,6 +286,17 @@ public class RunManager {
         }
     }
 
+    public void teleportDeadPlayerToSpawn(ServerPlayerEntity player) {
+        if (gameState != RunState.RUNNING || !spawnFinder.hasFoundSpawn()) {
+            return;
+        }
+
+        ServerWorld overworld = worldService.getOverworld();
+        if (overworld != null) {
+            teleportService.teleportToSpawnOnDeath(player, overworld, spawnFinder.getSpawnPos());
+        }
+    }
+
     // ==================== GAME END STATES ====================
 
     /**

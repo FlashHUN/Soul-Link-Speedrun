@@ -25,6 +25,7 @@ import net.zenzty.soullink.server.health.SharedStatsHandler;
 import net.zenzty.soullink.server.run.RunManager;
 import net.zenzty.soullink.server.run.RunState;
 import net.zenzty.soullink.server.settings.Settings;
+import net.zenzty.soullink.util.DeathHelper;
 import net.zenzty.soullink.util.TeamsHelper;
 
 /**
@@ -383,12 +384,13 @@ public class EventRegistry {
                 .append(deathMessage.copy().formatted(Formatting.RED));
         runManager.getServer().getPlayerManager().broadcast(formattedDeathMessage, false);
 
+        player.setHealth(player.getMaxHealth());
+
         if (Settings.getInstance().isTeamsMode()) {
             for (ServerPlayerEntity playerOnTeam : TeamsHelper.getPlayersOnPlayersTeam(player)) {
-                playerOnTeam.damage(player.getEntityWorld(), source, Float.MAX_VALUE);
+                DeathHelper.handleDeathInTeamsMode(playerOnTeam, source);
             }
         } else {
-            player.setHealth(player.getMaxHealth());
             runManager.triggerGameOver();
         }
     }

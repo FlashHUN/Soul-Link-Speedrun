@@ -22,6 +22,10 @@ repositories {
 	}
 }
 
+loom {
+	accessWidenerPath = file("src/main/resources/${project.archives_base_name}.accesswidener")
+}
+
 fabricApi {
 	configureDataGeneration {
 		client = true

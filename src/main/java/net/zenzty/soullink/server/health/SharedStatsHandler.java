@@ -145,7 +145,7 @@ public class SharedStatsHandler {
             sharedHealth = MathHelper.clamp(newHealth, 0.0f, getMaxHealth());
 
             // Check for death condition
-            if (sharedHealth <= 0) {
+            if (sharedHealth <= 0 && !Settings.getInstance().isTeamsMode()) {
                 SoulLink.LOGGER.info("Shared health depleted - triggering game over");
                 runManager.triggerGameOver();
                 return;
