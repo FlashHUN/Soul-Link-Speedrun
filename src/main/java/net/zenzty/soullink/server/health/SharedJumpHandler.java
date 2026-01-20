@@ -137,7 +137,9 @@ public class SharedJumpHandler {
                     continue;
 
                 // Apply force jump to this player
-                applyForceJump(player);
+                if (forcedJumpersThisTick.computeIfAbsent(playersTeamName, teamName -> new HashSet<>()).contains(player.getUuid())) {
+                    applyForceJump(player);
+                }
                 forcedJumpersThisTick.computeIfAbsent(playersTeamName, teamName -> new HashSet<>()).add(player.getUuid());
             }
 
