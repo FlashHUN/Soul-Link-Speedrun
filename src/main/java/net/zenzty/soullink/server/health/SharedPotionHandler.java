@@ -1,10 +1,7 @@
 package net.zenzty.soullink.server.health;
 
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
-import java.util.UUID;
+import java.util.*;
+
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.effect.StatusEffect;
 import net.minecraft.entity.effect.StatusEffectInstance;
@@ -17,6 +14,7 @@ import net.minecraft.util.math.Vec3d;
 import net.zenzty.soullink.SoulLink;
 import net.zenzty.soullink.server.run.RunManager;
 import net.zenzty.soullink.server.settings.Settings;
+import net.zenzty.soullink.util.TeamsHelper;
 
 /**
  * Handles shared potion effects between all players. Instant potions (healing/harming) are applied
@@ -34,7 +32,7 @@ public class SharedPotionHandler {
 
     // Track which effects have already been synced to prevent duplicates
     // Cleared at the end of the tick via server.execute().
-    private static final Set<String> recentlySyncedEffects = new HashSet<>();
+    private static final Map<String, Set<String>> recentlySyncedEffects = new HashMap<>();
 
     // Track pending instant effects for the current tick
     // Key: effect type ID, Value: map of player UUID to their distance from impact
@@ -278,7 +276,8 @@ public class SharedPotionHandler {
         // Create a unique key for this effect to prevent duplicate syncs
         String effectKey = effectType.getIdAsString() + "_" + effect.getDuration() + "_"
                 + effect.getAmplifier();
-        if (recentlySyncedEffects.contains(effectKey)) {
+        String teamName = TeamsHelper.getPlayersTeamNameOrNull(player);
+        if (recentlySyncedEffects.computeIfAbsent(teamName, t -> new HashSet<>()).contains(effectKey)) {
             return true; // Already synced this tick
         }
 
@@ -286,13 +285,13 @@ public class SharedPotionHandler {
         syncEffectToOtherPlayers(player, effect);
 
         // Mark as recently synced (will be cleared after a short delay)
-        recentlySyncedEffects.add(effectKey);
+        recentlySyncedEffects.computeIfAbsent(teamName, t -> new HashSet<>()).add(effectKey);
 
         // Schedule cleanup of the recently synced set
         MinecraftServer server = runManager.getServer();
         if (server != null) {
             server.execute(() -> {
-                recentlySyncedEffects.remove(effectKey);
+                recentlySyncedEffects.computeIfAbsent(teamName, t -> new HashSet<>()).remove(effectKey);
             });
         }
 
@@ -314,7 +313,8 @@ public class SharedPotionHandler {
 
         isSyncing = true;
         try {
-            for (ServerPlayerEntity otherPlayer : server.getPlayerManager().getPlayerList()) {
+            List<ServerPlayerEntity> playersOnTeam = TeamsHelper.getPlayersOnPlayersTeam(sourcePlayer);
+            for (ServerPlayerEntity otherPlayer : playersOnTeam) {
                 if (otherPlayer == sourcePlayer)
                     continue;
 
