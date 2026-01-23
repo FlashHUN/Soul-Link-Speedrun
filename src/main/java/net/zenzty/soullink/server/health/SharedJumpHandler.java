@@ -137,10 +137,11 @@ public class SharedJumpHandler {
                     continue;
 
                 // Apply force jump to this player
-                if (forcedJumpersThisTick.computeIfAbsent(playersTeamName, teamName -> new HashSet<>()).contains(player.getUuid())) {
+                if (!jumpersThisTick.computeIfAbsent(playersTeamName, teamName -> new HashSet<>()).isEmpty()
+                        || !forcedJumpersThisTick.computeIfAbsent(playersTeamName, teamName -> new HashSet<>()).isEmpty()) {
                     applyForceJump(player);
+                    forcedJumpersThisTick.computeIfAbsent(playersTeamName, teamName -> new HashSet<>()).add(player.getUuid());
                 }
-                forcedJumpersThisTick.computeIfAbsent(playersTeamName, teamName -> new HashSet<>()).add(player.getUuid());
             }
 
             SoulLink.LOGGER.debug(

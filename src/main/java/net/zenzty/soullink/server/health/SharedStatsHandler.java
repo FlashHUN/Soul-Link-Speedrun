@@ -25,7 +25,13 @@ public class SharedStatsHandler {
     private static final Map<String, SharedStatsHolder> sharedStatsByTeam = new HashMap<>();
 
     private static SharedStatsHolder getHolder(ServerPlayerEntity player) {
-        return sharedStatsByTeam.get(TeamsHelper.getPlayersTeamNameOrNull(player));
+        String playersTeamName = TeamsHelper.getPlayersTeamNameOrNull(player);
+        if (sharedStatsByTeam.containsKey(playersTeamName)) {
+            return sharedStatsByTeam.get(playersTeamName);
+        }
+        SharedStatsHolder holder = new SharedStatsHolder(getMaxHealth());
+        sharedStatsByTeam.put(playersTeamName, holder);
+        return holder;
     }
 
     // Prevent infinite sync loops
