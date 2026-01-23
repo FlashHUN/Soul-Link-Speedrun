@@ -28,7 +28,7 @@ import net.zenzty.soullink.util.TeamsHelper;
 public class SharedPotionHandler {
 
     // Track effects being synced to prevent infinite loops
-    private static boolean isSyncing = false;
+    private static final Map<String, Boolean> syncMap = new HashMap<>();
 
     // Track which effects have already been synced to prevent duplicates
     // Cleared at the end of the tick via server.execute().
@@ -123,7 +123,7 @@ public class SharedPotionHandler {
      */
     public static boolean onEffectApplied(ServerPlayerEntity player, StatusEffectInstance effect,
             Entity source) {
-        if (isSyncing) {
+        if (syncMap.computeIfAbsent(TeamsHelper.getPlayersTeamNameOrNull(player), t -> false)) {
             return true; // Allow synced effects through
         }
 
@@ -236,7 +236,7 @@ public class SharedPotionHandler {
         if (player != null) {
             // Apply the instant effect directly using the heal/damage method
             // Use SharedStatsHandler.setSyncing() to prevent heal/damage from triggering sync
-            SharedStatsHandler.setSyncing(true);
+            SharedStatsHandler.setSyncing(player, true);
             try {
                 RegistryEntry<StatusEffect> effectType = effect.getEffectType();
                 int amplifier = effect.getAmplifier();
@@ -257,7 +257,7 @@ public class SharedPotionHandler {
                             damageAmount, player.getName().getString());
                 }
             } finally {
-                SharedStatsHandler.setSyncing(false);
+                SharedStatsHandler.setSyncing(player, false);
             }
         }
 
@@ -311,7 +311,7 @@ public class SharedPotionHandler {
         if (server == null)
             return;
 
-        isSyncing = true;
+        syncMap.put(TeamsHelper.getPlayersTeamNameOrNull(sourcePlayer), true);
         try {
             List<ServerPlayerEntity> playersOnTeam = TeamsHelper.getPlayersOnPlayersTeam(sourcePlayer);
             for (ServerPlayerEntity otherPlayer : playersOnTeam) {
@@ -334,22 +334,22 @@ public class SharedPotionHandler {
                     effect.getEffectType().getIdAsString(), sourcePlayer.getName().getString());
 
         } finally {
-            isSyncing = false;
+            syncMap.put(TeamsHelper.getPlayersTeamNameOrNull(sourcePlayer), false);
         }
     }
 
-    /**
-     * Checks if the system is currently syncing effects.
-     */
-    public static boolean isSyncing() {
-        return isSyncing;
-    }
+//    /**
+//     * Checks if the system is currently syncing effects.
+//     */
+//    public static boolean isSyncing() {
+//        return isSyncing;
+//    }
 
     /**
      * Resets state for a new run.
      */
     public static void reset() {
-        isSyncing = false;
+        syncMap.clear();
         recentlySyncedEffects.clear();
         pendingSplashEvents.clear();
         currentTick = -1;

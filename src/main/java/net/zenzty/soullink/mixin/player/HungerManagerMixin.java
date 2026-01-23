@@ -40,7 +40,7 @@ public abstract class HungerManagerMixin {
     @Inject(method = "update", at = @At("TAIL"))
     private void afterHungerUpdate(ServerPlayerEntity player, CallbackInfo ci) {
         // Skip if syncing to prevent loops
-        if (SharedStatsHandler.isSyncing()) {
+        if (SharedStatsHandler.isSyncing(player)) {
             previousFoodLevel = this.foodLevel;
             previousSaturation = this.saturationLevel;
             return;

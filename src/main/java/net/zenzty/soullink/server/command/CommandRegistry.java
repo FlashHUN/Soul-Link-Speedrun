@@ -116,15 +116,15 @@ public class CommandRegistry {
                                                 .formatted(Formatting.WHITE))
                                 .append(Text.literal(" | Time: ").formatted(Formatting.GRAY))
                                 .append(Text.literal(runManager.getFormattedTime())
-                                                .formatted(Formatting.WHITE))
-                                .append(Text.literal(" | Health: ").formatted(Formatting.GRAY))
-                                .append(Text.literal(String.format("%.1f",
-                                                SharedStatsHandler.getSharedHealth()))
-                                                .formatted(Formatting.WHITE))
-                                .append(Text.literal(" | Hunger: ").formatted(Formatting.GRAY))
-                                .append(Text.literal(String
-                                                .valueOf(SharedStatsHandler.getSharedHunger()))
                                                 .formatted(Formatting.WHITE));
+//                                .append(Text.literal(" | Health: ").formatted(Formatting.GRAY))
+//                                .append(Text.literal(String.format("%.1f",
+//                                                SharedStatsHandler.getSharedHealth()))
+//                                                .formatted(Formatting.WHITE))
+//                                .append(Text.literal(" | Hunger: ").formatted(Formatting.GRAY))
+//                                .append(Text.literal(String
+//                                                .valueOf(SharedStatsHandler.getSharedHunger()))
+//                                                .formatted(Formatting.WHITE));
 
                 context.getSource().sendFeedback(() -> info, false);
 

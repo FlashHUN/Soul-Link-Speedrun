@@ -2,20 +2,20 @@ package net.zenzty.soullink.server.run;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
+
 import net.minecraft.entity.boss.ServerBossBar;
 import net.minecraft.entity.boss.dragon.EnderDragonFight;
 import net.minecraft.network.packet.s2c.play.SubtitleS2CPacket;
 import net.minecraft.network.packet.s2c.play.TitleS2CPacket;
 import net.minecraft.registry.RegistryKey;
+import net.minecraft.scoreboard.Team;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.sound.SoundCategory;
 import net.minecraft.sound.SoundEvents;
-import net.minecraft.text.ClickEvent;
-import net.minecraft.text.HoverEvent;
-import net.minecraft.text.Style;
-import net.minecraft.text.Text;
+import net.minecraft.text.*;
 import net.minecraft.util.Formatting;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.GameMode;
@@ -24,6 +24,8 @@ import net.zenzty.soullink.SoulLink;
 import net.zenzty.soullink.mixin.server.EnderDragonFightAccessor;
 import net.zenzty.soullink.server.health.SharedStatsHandler;
 import net.zenzty.soullink.server.settings.Settings;
+import net.zenzty.soullink.util.TeamsHelper;
+import org.jetbrains.annotations.Nullable;
 
 /**
  * Facade that coordinates run lifecycle using dedicated services. Manages game state transitions
@@ -349,12 +351,12 @@ public class RunManager {
     /**
      * Handles victory - Ender Dragon killed.
      */
-    public synchronized void triggerVictory() {
+    public synchronized void triggerVictory(@Nullable String winningTeam) {
         if (gameState != RunState.RUNNING) {
             return;
         }
 
-        SoulLink.LOGGER.info("Victory! Dragon defeated!");
+        SoulLink.LOGGER.info("Victory! Dragon defeated by team {}!", winningTeam);
 
         timerService.stop();
         gameState = RunState.GAMEOVER;
@@ -368,8 +370,10 @@ public class RunManager {
                         SoundEvents.UI_TOAST_CHALLENGE_COMPLETE, SoundCategory.PLAYERS, 1.0f, 1.0f);
             }
 
+            boolean didPlayerWin = Objects.equals(TeamsHelper.getPlayersTeamNameOrNull(player), winningTeam);
+
             player.networkHandler.sendPacket(new TitleS2CPacket(
-                    Text.literal("VICTORY").formatted(Formatting.GOLD, Formatting.BOLD)));
+                    Text.literal(didPlayerWin ? "VICTORY" : "YOU LOST!").formatted(didPlayerWin ? Formatting.GOLD : Formatting.RED, Formatting.BOLD)));
 
             player.networkHandler.sendPacket(
                     new SubtitleS2CPacket(Text.literal(finalTime).formatted(Formatting.WHITE)));
@@ -379,6 +383,26 @@ public class RunManager {
                 .append(Text.literal("Dragon defeated in ").formatted(Formatting.GRAY))
                 .append(Text.literal(finalTime).formatted(Formatting.WHITE));
         server.getPlayerManager().broadcast(victoryMessage, false);
+
+        if (Settings.getInstance().isTeamsMode()) {
+            List<ServerPlayerEntity> winningPlayers = TeamsHelper.getPlayersOnTeam(winningTeam);
+            if (winningPlayers.isEmpty()) {
+                Text message = Text.empty().append(getPrefix())
+                    .append(Text.literal("Could not determine winners :(").formatted(Formatting.RED));
+                server.getPlayerManager().broadcast(message, false);
+            } else {
+                MutableText winningPlayersMessage = Text.empty().append(getPrefix())
+                        .append(Text.literal("Winning players: ").formatted(Formatting.GRAY));
+                for (int i = 0; i < winningPlayers.size(); i++) {
+                    ServerPlayerEntity player = winningPlayers.get(i);
+                    winningPlayersMessage.append(Text.literal(player.getGameProfile().name()).formatted(Formatting.GOLD));
+                    if (i != winningPlayers.size() - 1) {
+                        winningPlayersMessage.append(Text.literal(", ").formatted(Formatting.GRAY));
+                    }
+                }
+                server.getPlayerManager().broadcast(winningPlayersMessage, false);
+            }
+        }
 
         Text clickableHere = Text.literal("here").setStyle(Style.EMPTY.withColor(Formatting.AQUA)
                 .withUnderline(true).withClickEvent(new ClickEvent.RunCommand("/start"))

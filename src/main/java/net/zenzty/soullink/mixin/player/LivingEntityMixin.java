@@ -45,7 +45,7 @@ public abstract class LivingEntityMixin {
 
         // Only sync if run is active and not already syncing
         RunManager runManager = RunManager.getInstance();
-        if (runManager == null || !runManager.isRunActive() || SharedStatsHandler.isSyncing()) {
+        if (runManager == null || !runManager.isRunActive() || SharedStatsHandler.isSyncing(player)) {
             return;
         }
 

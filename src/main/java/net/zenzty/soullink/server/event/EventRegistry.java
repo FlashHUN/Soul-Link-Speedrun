@@ -10,6 +10,8 @@ import net.fabricmc.fabric.api.networking.v1.ServerPlayConnectionEvents;
 import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.entity.boss.dragon.EnderDragonEntity;
 import net.minecraft.entity.damage.DamageSource;
+import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.scoreboard.Team;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.server.world.ServerWorld;
@@ -279,7 +281,8 @@ public class EventRegistry {
                         && runManager.isTemporaryWorld(dragonWorld.getRegistryKey())) {
                     SoulLink.LOGGER
                             .info("Ender Dragon killed in temporary End - triggering victory!");
-                    runManager.triggerVictory();
+                    String winningTeam = damageSource.getAttacker() instanceof ServerPlayerEntity ? TeamsHelper.getPlayersTeamNameOrNull((ServerPlayerEntity) damageSource.getAttacker()) : null;
+                    runManager.triggerVictory(winningTeam);
                 }
             }
         });
@@ -310,7 +313,7 @@ public class EventRegistry {
                 return true;
             }
 
-            if (SharedStatsHandler.isSyncing()) {
+            if (SharedStatsHandler.isSyncing(player)) {
                 return true;
             }
 
