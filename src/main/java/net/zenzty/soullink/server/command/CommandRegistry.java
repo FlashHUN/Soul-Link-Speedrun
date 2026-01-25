@@ -11,6 +11,7 @@ import net.minecraft.util.Formatting;
 import net.zenzty.soullink.server.health.SharedStatsHandler;
 import net.zenzty.soullink.server.run.RunManager;
 import net.zenzty.soullink.server.settings.SettingsGui;
+import net.zenzty.soullink.server.settings.TeamsGui;
 
 /**
  * Registers all mod commands: /start, /stoprun, /runinfo, /settings, /reset
@@ -42,6 +43,10 @@ public class CommandRegistry {
                                         // /settings - Open the settings GUI
                                         dispatcher.register(CommandManager.literal("settings")
                                                         .executes(CommandRegistry::handleSettings));
+
+                                        // /settings - Open the settings GUI
+                                        dispatcher.register(CommandManager.literal("teams")
+                                                .executes(CommandRegistry::handleTeams));
 
                                         // /reset - Manually reset the current run
                                         dispatcher.register(CommandManager.literal("reset")
@@ -138,6 +143,16 @@ public class CommandRegistry {
                 }
                 context.getSource().sendError(
                                 RunManager.formatMessage("Only players can use this command."));
+                return 0;
+        }
+
+        private static int handleTeams(CommandContext<ServerCommandSource> context) {
+                if (context.getSource().getEntity() instanceof ServerPlayerEntity player) {
+                        TeamsGui.open(player);
+                        return Command.SINGLE_SUCCESS;
+                }
+                context.getSource().sendError(
+                        RunManager.formatMessage("Only players can use this command."));
                 return 0;
         }
 

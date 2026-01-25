@@ -74,7 +74,7 @@ public class SettingsGui {
     /**
      * Creates a non-italic text for item names.
      */
-    private static Text createItemName(String text, Formatting... formattings) {
+    public static Text createItemName(String text, Formatting... formattings) {
         Style style = Style.EMPTY.withItalic(false);
         for (Formatting formatting : formattings) {
             style = style.withFormatting(formatting);
@@ -130,7 +130,7 @@ public class SettingsGui {
             // Add shared jumping setting
             setStack(SHARED_JUMPING_SLOT, createSharedJumpingItem());
 
-            // Add teams mode setting
+            // Add playerToTeamId mode setting
             setStack(TEAMS_MODE_SLOT, createTeamsModeItem());
 
             // Add confirm button
@@ -279,7 +279,7 @@ public class SettingsGui {
                                     .setStyle(Style.EMPTY.withItalic(false)
                                             .withFormatting(Formatting.RED))),
                     Text.empty(),
-                    Text.literal("Only share stats & etc. between players on the same scoreboard teams.").setStyle(
+                    Text.literal("Only share stats & etc. between players on the same scoreboard playerToTeamId.").setStyle(
                             Style.EMPTY.withItalic(false).withFormatting(Formatting.DARK_GRAY)),
                     Text.empty(), Text.literal("Click to toggle").setStyle(
                             Style.EMPTY.withItalic(false).withFormatting(Formatting.DARK_GRAY))));
@@ -444,7 +444,7 @@ public class SettingsGui {
     /**
      * Virtual slot that prevents all item interactions - items cannot be taken, inserted, or moved.
      */
-    private static class VirtualSlot extends Slot {
+    public static class VirtualSlot extends Slot {
         public VirtualSlot(Inventory inventory, int index, int x, int y) {
             super(inventory, index, x, y);
         }

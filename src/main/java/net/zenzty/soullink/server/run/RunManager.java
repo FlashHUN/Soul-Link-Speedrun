@@ -24,6 +24,7 @@ import net.zenzty.soullink.SoulLink;
 import net.zenzty.soullink.mixin.server.EnderDragonFightAccessor;
 import net.zenzty.soullink.server.health.SharedStatsHandler;
 import net.zenzty.soullink.server.settings.Settings;
+import net.zenzty.soullink.server.settings.Teams;
 import net.zenzty.soullink.util.TeamsHelper;
 import org.jetbrains.annotations.Nullable;
 
@@ -147,6 +148,12 @@ public class RunManager {
 
         // Apply any pending settings
         Settings.getInstance().applyPendingSettings();
+        Teams.getInstance().applyPendingTeams();
+
+        // Create teams if needed
+        if (Settings.getInstance().isTeamsMode()) {
+            Teams.createTeams(server);
+        }
 
         // Broadcast starting message
         server.getPlayerManager().broadcast(formatMessage("Generating new world..."), false);

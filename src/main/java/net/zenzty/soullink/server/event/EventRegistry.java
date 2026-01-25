@@ -10,8 +10,6 @@ import net.fabricmc.fabric.api.networking.v1.ServerPlayConnectionEvents;
 import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.entity.boss.dragon.EnderDragonEntity;
 import net.minecraft.entity.damage.DamageSource;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.scoreboard.Team;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.server.world.ServerWorld;
@@ -27,6 +25,7 @@ import net.zenzty.soullink.server.health.SharedStatsHandler;
 import net.zenzty.soullink.server.run.RunManager;
 import net.zenzty.soullink.server.run.RunState;
 import net.zenzty.soullink.server.settings.Settings;
+import net.zenzty.soullink.server.settings.Teams;
 import net.zenzty.soullink.util.DeathHelper;
 import net.zenzty.soullink.util.TeamsHelper;
 
@@ -66,6 +65,7 @@ public class EventRegistry {
         ServerLifecycleEvents.SERVER_STARTED.register(server -> {
             SoulLink.LOGGER.info("Server started - initializing RunManager");
             RunManager.init(server);
+            Teams.cleanupTeams(server);
         });
 
         // Server stopping - cleanup worlds
@@ -73,6 +73,7 @@ public class EventRegistry {
             SoulLink.LOGGER.info("Server stopping - cleaning up temporary worlds");
             delayedTasks.clear(); // Clear pending tasks
             RunManager.cleanup();
+            Teams.cleanupTeams(server);
         });
     }
 
@@ -228,6 +229,11 @@ public class EventRegistry {
                         .withClickEvent(new ClickEvent.RunCommand("/settings"))
                         .withHoverEvent(new HoverEvent.ShowText(
                                 Text.literal("Open run options").formatted(Formatting.GRAY)))))
+                .append(Text.literal(" and ").formatted(Formatting.GRAY))
+                .append(Text.literal("/teams").setStyle(Style.EMPTY.withColor(Formatting.GOLD)
+                        .withClickEvent(new ClickEvent.RunCommand("/teams"))
+                        .withHoverEvent(new HoverEvent.ShowText(
+                                Text.literal("Open teams options").formatted(Formatting.GRAY)))))
                 .append(Text.literal(".").formatted(Formatting.GRAY)), false);
     }
 
