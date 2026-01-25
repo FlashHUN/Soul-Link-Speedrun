@@ -3,21 +3,22 @@
 	"package": "net.zenzty.soullink.mixin",
 	"compatibilityLevel": "JAVA_21",
 	"mixins": [
-		"player.ServerPlayerEntityMixin",
-		"player.LivingEntityMixin",
+		"interaction.BedBlockMixin",
+		"interaction.EndPortalMixin",
+		"interaction.FireBlockMixin",
+		"interaction.FireChargeItemMixin",
+		"interaction.FlintAndSteelMixin",
+		"interaction.NetherPortalMixin",
+		"player.AbsorptionMixin",
 		"player.HungerManagerMixin",
 		"player.JumpMixin",
+		"player.LivingEntityMixin",
+		"player.ServerPlayerEntityMixin",
 		"player.StatusEffectMixin",
-		"player.AbsorptionMixin",
-		"interaction.NetherPortalMixin",
-		"interaction.EndPortalMixin",
-		"interaction.FlintAndSteelMixin",
-		"interaction.FireChargeItemMixin",
-		"interaction.FireBlockMixin",
-		"ui.ScreenHandlerAccessor",
-		"ui.SpectatorInteractionMixin",
+		"server.EnderDragonFightAccessor",
 		"server.ServerWorldAccessor",
-		"server.EnderDragonFightAccessor"
+		"ui.ScreenHandlerAccessor",
+		"ui.SpectatorInteractionMixin"
 	],
 	"injectors": {
 		"defaultRequire": 1
